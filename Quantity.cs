@@ -41,7 +41,11 @@ namespace PhysicalAnalysis
                 {
                     dimensions += (unit, parts.Length == 1 ? (Number)1.0 : Number.Parse(parts[1]));
                 }
-                else
+                else if (Dimension.compositeSymbols.TryGetValue(parts[0], out var s))
+                {
+                    value *= s.factor.value;
+                    dimensions += s.factor.dimension;
+                } else
                 {
                     var symbol = new string(parts[0].Skip(1).ToArray());
                     var prefix = parts[0][0];

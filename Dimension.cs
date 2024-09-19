@@ -8,6 +8,7 @@
         public List<Unit> units = [];
 
         public static readonly Dictionary<string, Unit> symbols = [];
+        public static readonly Dictionary<string, CompositeUnit> compositeSymbols = [];
 
         public static readonly Dimension Length = new("Length", "meter", "m");
         public static readonly Dimension Mass = new("Mass", "gram", "g");

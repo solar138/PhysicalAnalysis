@@ -57,6 +57,9 @@ namespace PhysicalAnalysis
         // Angle Units
         public static readonly Unit Degree = new("Degree", "deg", Dimension.Angle, Math.PI / 180.0, 0.0);
 
+        // Composite Units
+        public static readonly CompositeUnit Newton = new ("Newton", "N", "kg m s^-2");
+
 
         public Unit(string name, string symbol, Dimension dimension, Number baseFactor = 1.0, Number baseOffset = 0.0)
         {
@@ -82,6 +85,24 @@ namespace PhysicalAnalysis
     {
         public Number factor = factor;
         public Unit baseUnit = unit;
+    }
+    public class CompositeUnit
+    {
+        public string name;
+        public string symbol;
+        public Quantity factor;
+        public CompositeUnit(string name, string symbol, string dimensions)
+        {
+            if (!(dimensions[0] >= '0' && dimensions[0] <= '9'))
+            {
+                dimensions = "1 " + dimensions;
+            }
+
+            this.name = name;
+            this.symbol = symbol;
+            this.factor = new Quantity(dimensions);
+            Dimension.compositeSymbols.Add(symbol, this);
+        }
     }
 
 

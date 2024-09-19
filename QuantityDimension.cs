@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 
 using Number = double;
 
@@ -68,13 +69,64 @@ namespace PhysicalAnalysis
             }
         }
 
+        public static QuantityDimension Parse(string str)
+        {
+            var dimensions = new QuantityDimension();
+            var values = str.Split(' ');
+
+            for (var i = 0; i < values.Length; i++)
+            {
+                var parts = values[i].Split('^');
+
+                if (Dimension.symbols.TryGetValue(parts[0], out var unit))
+                {
+                    dimensions.dimension[unit.Dimension] = (unit, parts.Length == 1 ? (Number)1.0 : Number.Parse(parts[1]));
+                }
+                else
+                {
+                    var symbol = new string(parts[0].Skip(1).ToArray());
+
+                    if (Dimension.symbols.TryGetValue(symbol, out unit))
+                    {
+                        dimensions += (unit, parts.Length == 1 ? (Number)1.0 : Number.Parse(parts[1]));
+                    }
+                    else
+                    {
+                        throw new UnitNotFoundException("Unit " + parts[0] + " does not exist.");
+                    }
+                }
+            }
+            return dimensions;
+        }
+
         public override readonly string ToString()
         {
+            if (MathOptions.consolidateUnits)
+            {
+                foreach (var (symbol, unit) in Dimension.compositeSymbols)
+                {
+                    var remainder = this - unit.factor.dimension;
+
+                    if (remainder.dimension.Count <= this.dimension.Count)
+                    {
+                        return " " + unit.symbol + remainder.ToStringRaw();
+                    }
+                }
+            }
             if (MathOptions.baseKilograms)
             {
                 return dimension.Aggregate("", (current, kv) => current + " " + (kv.Value.Item1 == Unit.Gram ? "k" : "") + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
             }
             return dimension.Aggregate("", (current, kv) => current + " " + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
+        }
+
+        public readonly string ToStringRaw()
+        {
+            if (MathOptions.baseKilograms)
+            {
+                return dimension.Aggregate("", (current, kv) => kv.Value.Item2 == 0.0 ? "" : current + " " + (kv.Value.Item1 == Unit.Gram ? "k" : "") + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
+            }
+            return dimension.Aggregate("", (current, kv) => kv.Value.Item2 == 0.0 ? "" : current + " " + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
         }
 
         /// <summary>
@@ -97,7 +149,8 @@ namespace PhysicalAnalysis
                     throw new UnitMismatchException("Cannot subtract dimensions with different units.");
                 }
                 var newPower = d.dimension.GetValueOrDefault(dimension, (unit, 0.0)).Item2 - power;
-                if (newPower == (Number)1.0)
+
+                if (newPower == 0.0)
                 {
                     d.dimension.Remove(dimension);
                 }
@@ -128,7 +181,17 @@ namespace PhysicalAnalysis
                 {
                     throw new UnitMismatchException("Cannot add dimensions with different units.");
                 }
-                d.dimension[dimension] = (unit, d.dimension.TryGetValue(dimension, out var v) ? v.Item2 + power : power);
+
+                var newPower = d.dimension.TryGetValue(dimension, out var v) ? v.Item2 + power : power;
+
+                if (newPower == 0.0)
+                {
+                    d.dimension.Remove(dimension);
+                }
+                else
+                {
+                    d.dimension[dimension] = (unit, newPower);
+                }
             }
             return d;
         }
@@ -147,9 +210,12 @@ namespace PhysicalAnalysis
                 dimension = new Dictionary<Dimension, (Unit, Number)>(lhs.dimension)
             };
 
-            foreach (var (dimension, (unit, power)) in lhs.dimension)
+            if (rhs != 0)
             {
-                d.dimension[dimension] = (unit, power * rhs);
+                foreach (var (dimension, (unit, power)) in lhs.dimension)
+                {
+                    d.dimension[dimension] = (unit, power * rhs);
+                }
             }
             return d;
         }
@@ -174,7 +240,7 @@ namespace PhysicalAnalysis
         }
 
         /// <summary>
-        ///     Adds a dimension to the quantify dimensions.
+        ///     Adds a dimension to the <see cref="QuantityDimension"/>.
         /// </summary>
         /// <param name="lhs"></param>
         /// <param name="rhs"></param>
@@ -183,10 +249,15 @@ namespace PhysicalAnalysis
         {
             lhs.dimension[rhs.Item1.Dimension] = (rhs.Item1, rhs.Item2 + lhs.dimension.GetValueOrDefault(rhs.Item1.Dimension, (rhs.Item1, 0.0)).Item2);
 
+            if (lhs.dimension[rhs.Item1.Dimension].Item2 == 0.0)
+            {
+                lhs.dimension.Remove(rhs.Item1.Dimension);
+            }
+
             return lhs;
         }
         /// <summary>
-        ///     Adds a dimension to the quantify dimensions.
+        ///     Adds a dimension to the <see cref="QuantityDimension"/>.
         /// </summary>
         /// <param name="lhs"></param>
         /// <param name="rhs"></param>
@@ -194,6 +265,11 @@ namespace PhysicalAnalysis
         public static QuantityDimension operator +(QuantityDimension lhs, Unit rhs)
         {
             lhs.dimension[rhs.Dimension] = (rhs, 1.0 + lhs.dimension.GetValueOrDefault(rhs.Dimension, (rhs, 0.0)).Item2);
+
+            if (lhs.dimension[rhs.Dimension].Item2 == 0.0)
+            {
+                lhs.dimension.Remove(rhs.Dimension);
+            }
 
             return lhs;
         }

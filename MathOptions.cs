@@ -9,7 +9,21 @@ namespace PhysicalAnalysis
 
         public static AngleUnit angleUnit = AngleUnit.Radian;
         public static VectorSystem vectorSystem = VectorSystem.Cartesian;
+
+        /// <summary>
+        ///      Whether to display grams as kilograms. This only affects .ToString() and constructor methods, the underlying base unit for calculations is still grams.
+        /// </summary>
         public static bool baseKilograms = true;
+
+        /// <summary>
+        ///     Whether to show common composite units such as Newtons or Joules as a single unit.
+        /// </summary>
+        public static bool consolidateUnits = true;
+
+        /// <summary>
+        ///     The priority order for which units are consolidated first, if multiple are available.
+        /// </summary>
+        public static List<CompositeUnit> consolidatePriority = [];
 
         /// <summary>
         ///     Converts an angle to radians if useRadians is true.
