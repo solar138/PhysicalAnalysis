@@ -1,8 +1,18 @@
 ﻿namespace PhysicalAnalysis
 {
+    /// <summary>
+    ///     A physical measured value, often expressed in multiple units.
+    /// </summary>
     public class Dimension
     {
+        /// <summary>
+        ///     The name of the dimension.
+        /// </summary>
         public string name;
+
+        /// <summary>
+        ///     The base unit set at "1" for the internal representation. 
+        /// </summary>
         public Unit baseUnit;
 
         public List<Unit> units = [];
@@ -19,6 +29,12 @@
         public static readonly Dimension AmountOfSubstance = new("Amount of Substance", "mole", "mol");
         public static readonly Dimension Angle = new("Angle", "radian", "rad");
 
+        /// <summary>
+        ///     Create a new dimension from a name as well as a base unit with a symbol and name.
+        /// </summary>
+        /// <param name="name"> Name of the dimension. </param>
+        /// <param name="baseUnit"> Name of the new base unit. </param>
+        /// <param name="baseUnitSymbol"> Symbol of the new base unit. </param>
         public Dimension(string name, string baseUnit, string baseUnitSymbol)
         {
             this.name = name;

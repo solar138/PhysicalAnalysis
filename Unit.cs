@@ -2,6 +2,9 @@
 
 namespace PhysicalAnalysis
 {
+    /// <summary>
+    ///     A standardized interval to measure a dimension with.
+    /// </summary>
     public class Unit
     {
         public string Name { get; }

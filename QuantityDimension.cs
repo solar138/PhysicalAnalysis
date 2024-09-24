@@ -5,6 +5,9 @@ using Number = double;
 
 namespace PhysicalAnalysis
 {
+    /// <summary>
+    ///     A set of units and powers representing a specific measured quantity.
+    /// </summary>
     public struct QuantityDimension
     {
         private Dictionary<Dimension, (Unit, Number)> dimension = [];
@@ -69,6 +72,12 @@ namespace PhysicalAnalysis
             }
         }
 
+        /// <summary>
+        ///     Creates a QuantityDimension from a string of units. Using "symbol^power" syntax and spaces separating dimensions.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        /// <exception cref="UnitNotFoundException"></exception>
         public static QuantityDimension Parse(string str)
         {
             var dimensions = new QuantityDimension();
@@ -99,6 +108,10 @@ namespace PhysicalAnalysis
             return dimensions;
         }
 
+        /// <summary>
+        ///     Converts the QuantityDimension to a string, following the MathOptions.consolidateUnits setting.
+        /// </summary>
+        /// <returns></returns>
         public override readonly string ToString()
         {
             if (MathOptions.consolidateUnits)
@@ -120,6 +133,10 @@ namespace PhysicalAnalysis
             return dimension.Aggregate("", (current, kv) => current + " " + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
         }
 
+        /// <summary>
+        ///     Converts the QuantityDimension to a string without consolidating units, only showing the base units.
+        /// </summary>
+        /// <returns></returns>
         public readonly string ToStringRaw()
         {
             if (MathOptions.baseKilograms)
@@ -320,7 +337,7 @@ namespace PhysicalAnalysis
         public static readonly Dictionary<int, char> expToPrefix = new() { { 3, 'k' }, { 6, 'M' }, { 9, 'G' }, { 12, 'T' }, { 15, 'P' }, { 18, 'E' }, { 21, 'Z' }, { 24, 'Y' }, { -18, 'a' }, { -15, 'f' }, { -12, 'p' }, { -9, 'n' }, { -6, 'u' }, { -3, 'm' }, { -2, 'c' }, { -1, 'd' } };
 
         /// <summary>
-        ///     Reads a string with an SI prefix such as kg or mm and returns the factor.
+        ///     Reads a string with an SI prefix such as "kg" or "mm" and returns the factor.
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>

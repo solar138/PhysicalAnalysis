@@ -2,6 +2,9 @@
 
 namespace PhysicalAnalysis
 {
+    /// <summary>
+    ///     Static class with configurable display and unit options.
+    /// </summary>
     public static class MathOptions
     {
         public enum AngleUnit { Radian, Degree }
@@ -11,7 +14,7 @@ namespace PhysicalAnalysis
         public static VectorSystem vectorSystem = VectorSystem.Cartesian;
 
         /// <summary>
-        ///      Whether to display grams as kilograms. This only affects .ToString() and constructor methods, the underlying base unit for calculations is still grams.
+        ///      Whether to display grams as kilograms. This only affects .ToString(), the underlying base unit for calculations is still grams.
         /// </summary>
         public static bool baseKilograms = true;
 
