@@ -42,6 +42,9 @@ namespace PhysicalAnalysis
         public static readonly Unit Yard = new("Yard", "yd", Dimension.Length, 0.9144, 0.0);
         public static readonly Unit Mile = new("Mile", "mi", Dimension.Length, 1609.34, 0.0);
         public static readonly Unit NauticalMile = new("Nautical Mile", "nmi", Dimension.Length, 1852.0, 0.0);
+        public static readonly Unit AstronomicalUnit = new("Astronomical Unit", "au", Dimension.Length, 149597870700, 0.0);
+        public static readonly Unit LightYear = new("Light Year", "ly", Dimension.Length, 9.4607304725808e15, 0.0);
+        public static readonly Unit Parsec = new("Parsec", "pc", Dimension.Length, 3.09e16, 0.0);
 
         // Other Temperature Units
         public static readonly Unit Celsius = new("Celsius", "°C", Dimension.Temperature, 1.0, 273.15);
@@ -60,8 +63,28 @@ namespace PhysicalAnalysis
         // Angle Units
         public static readonly Unit Degree = new("Degree", "deg", Dimension.Angle, Math.PI / 180.0, 0.0);
 
-        // Composite Units
-        public static readonly CompositeUnit Newton = new ("Newton", "N", "kg m s^-2");
+        // Derived Units
+        public static readonly DerivedUnit Newton = new ("Newton", "N", "kg m s^-2");
+        public static readonly DerivedUnit Joule = new("Joule", "J", "kg m^2 s^-2");
+        public static readonly DerivedUnit Coulomb = new("Coulomb", "C", "A s");
+        public static readonly DerivedUnit Hertz = new("Hertz", "Hz", "s^-1");
+        public static readonly DerivedUnit Pascal = new("Pascal", "Pa", "N m^-2");
+        public static readonly DerivedUnit Watt = new("Watt", "W", "J s^-1");
+        public static readonly DerivedUnit Volt = new("Volt", "V", "J C^-1");
+        public static readonly DerivedUnit Farad = new("Farad", "F", "C V^-1");
+        public static readonly DerivedUnit Ohm = new("Ohm", "Ω", "V A^-1");
+        public static readonly DerivedUnit Siemens = new("Siemens", "S", "Ω^-1");
+        public static readonly DerivedUnit Weber = new("Weber", "Wb", "V s");
+        public static readonly DerivedUnit Tesla = new("Tesla", "T", "Wb m^-2");
+        public static readonly DerivedUnit Henry = new("Henry", "H", "Wb A^-1");
+        public static readonly DerivedUnit Gray = new("Gray", "Gy", "J kg^-1");
+        public static readonly DerivedUnit Liter = new("Liter", "L", "0.001 m^3");
+
+        // Physical constants
+        public static readonly DerivedUnit SpeedOfLight = new("Speed Of Light", "c", "299792458 m s^-1");
+        public static readonly DerivedUnit ReducedPlanck = new("Reduced Planck Constant", "ℏ", "1.054571817e-34 J s");
+        public static readonly DerivedUnit Planck = new("Planck Constant", "h", "6.62607015e-34 J s");
+        public static readonly DerivedUnit Gravitation = new("Gravitational Constant", "G", "6.6743015e-11 N m^2 kg^-2");
 
 
         public Unit(string name, string symbol, Dimension dimension, Number baseFactor = 1.0, Number baseOffset = 0.0)
@@ -89,12 +112,12 @@ namespace PhysicalAnalysis
         public Number factor = factor;
         public Unit baseUnit = unit;
     }
-    public class CompositeUnit
+    public class DerivedUnit
     {
         public string name;
         public string symbol;
         public Quantity factor;
-        public CompositeUnit(string name, string symbol, string dimensions)
+        public DerivedUnit(string name, string symbol, string dimensions)
         {
             if (!(dimensions[0] >= '0' && dimensions[0] <= '9'))
             {

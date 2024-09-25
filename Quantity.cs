@@ -10,17 +10,27 @@ namespace PhysicalAnalysis
 
         public QuantityDimension dimension = new();
 
+        /// <summary>
+        ///     Creates a Quantity from a number and a dimension.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="dimension"></param>
         public Quantity(Number value, QuantityDimension dimension)
         {
             this.value = value;
             this.dimension = dimension;
         }
+        /// <summary>
+        ///     Creates a Quantity from a string of units. Using "symbol^power" syntax and spaces separating dimensions.
+        /// </summary>
+        /// <param name="str"></param>
+        /// <exception cref="UnitNotFoundException"> A unit was not found. </exception>
         public Quantity(string str)
         {
             var values = str.Split(' ');
 
             var dimensions = new QuantityDimension();
-            var result = MyRegex().Match(values[0]);
+            var result = QuantityLookupRegex().Match(values[0]);
 
             var number = result.Groups[1].Value;
             var letter = result.Groups[2].Value;
@@ -65,6 +75,11 @@ namespace PhysicalAnalysis
 
             this.dimension = dimensions;
         }
+        /// <summary>
+        ///     Creates a quantity from a number and a list of units.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="units"></param>
         public Quantity(Number value, params Unit[] units)
         {
             foreach (var unit in units)
@@ -80,6 +95,13 @@ namespace PhysicalAnalysis
             this.value = value;
         }
 
+        /// <summary>
+        ///     Adds two quantities. Both quantities must have the same dimension.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
+        /// <exception cref="DimensionMismatchException"></exception>
         public static Quantity operator +(Quantity lhs, Quantity rhs)
         {
             if (!CompareDimensions(lhs, rhs))
@@ -92,6 +114,14 @@ namespace PhysicalAnalysis
 
             return rhs;
         }
+
+        /// <summary>
+        ///     Subtracts two quantities. Both quantities must have the same dimension.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
+        /// <exception cref="DimensionMismatchException"></exception>
         public static Quantity operator -(Quantity lhs, Quantity rhs)
         {
             if (!CompareDimensions(lhs, rhs))
@@ -104,41 +134,77 @@ namespace PhysicalAnalysis
 
             return rhs;
         }
+
+        /// <summary>
+        ///     Multiplies two quantities.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
+        /// <exception cref="DimensionMismatchException"></exception>
         public static Quantity operator *(Quantity lhs, Quantity rhs)
         {
             return new Quantity(lhs.value * QuantityDimension.MatchUnits(lhs, rhs).value, lhs.dimension + rhs.dimension);
         }
+
+        /// <summary>
+        ///     Multiplies two quantities.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
+        /// <exception cref="DimensionMismatchException"></exception>
         public static Quantity operator /(Quantity lhs, Quantity rhs)
         {
             return new Quantity(lhs.value / QuantityDimension.MatchUnits(lhs, rhs).value, lhs.dimension - rhs.dimension);
         }
 
+        /// <summary>
+        ///     Returns the string representation of the quantity.
+        /// </summary>
+        /// <returns></returns>
         public override readonly string ToString()
         {
+            var value = this.value;
             if (!MathOptions.baseKilograms)
             {
-                var units = dimension.ToString();
-                return $"{this.value}{units}";
+                var units = dimension.ToStringQuantified(ref value);
+                return $"{value}{units}";
             }
 
             var (unit, power) = dimension.GetUnits(Dimension.Mass);
-
-            var value = this.value;
 
             if (unit == Unit.Gram)
             {
                 value *= Math.Pow(0.001, power);
 
-                var units = dimension.ToString();
+                var units = dimension.ToStringQuantified(ref value);
                 return $"{value}{units}";
             }
             else
             {
-                var units = dimension.ToString();
+                var units = dimension.ToStringQuantified(ref value);
                 return $"{value}{units}";
             }
         }
 
+        /// <summary>
+        ///     Returns the string representation of the quantity's units with respect to the scale of the dimension in consolidating units.
+        /// </summary>
+        /// <returns></returns>
+        public readonly string ToStringDimensions()
+        {
+            var value = this.value;
+
+            return value + dimension.ToStringQuantified(ref value);
+        }
+
+        /// <summary>
+        ///     Returns true if both quantities have the same dimension.
+        /// </summary>
+        /// <param name="lhs"></param>
+        /// <param name="rhs"></param>
+        /// <returns></returns>
         public static bool CompareDimensions(Quantity lhs, Quantity rhs)
         {
             return lhs.dimension == rhs.dimension;
@@ -147,6 +213,7 @@ namespace PhysicalAnalysis
         /// <summary>
         ///     Returns the cosine of this quantity.
         /// </summary>
+        /// <exception cref="DimensionMismatchException"> Cosine only works on angles. </exception>
         /// <returns> The cosine. </returns>
         public readonly Quantity Cos()
         {
@@ -160,6 +227,7 @@ namespace PhysicalAnalysis
         /// <summary>
         ///     Returns the sine of this quantity.
         /// </summary>
+        /// <exception cref="DimensionMismatchException"> Sine only works on angles. </exception>
         /// <returns> The sine. </returns>
         public readonly Quantity Sin()
         {
@@ -173,6 +241,7 @@ namespace PhysicalAnalysis
         /// <summary>
         ///     Returns the tangent of this quantity.
         /// </summary>
+        /// <exception cref="DimensionMismatchException"> Tangent only works on angles. </exception>
         /// <returns> The tangent. </returns>
         public readonly Quantity Tan()
         {
@@ -210,13 +279,18 @@ namespace PhysicalAnalysis
             return new Quantity((value - oldUnit.BaseOffset) * Math.Pow(unit.BaseFactor / oldUnit.BaseFactor, power) + unit.BaseOffset, dimension);
         }
 
+        /// <summary>
+        ///     
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
         public static Quantity Parse(string str)
         {
             return new Quantity(str);
         }
 
-        [GeneratedRegex(@"([\d\.]+)([a-zA-Z]+(\^\-?\d+)?)")]
-        private static partial Regex MyRegex();
+        [GeneratedRegex(@"([\d\.e\-]+)([a-zA-Z]+(\^\-?\d+)?)?")]
+        private static partial Regex QuantityLookupRegex();
     }
 
 }

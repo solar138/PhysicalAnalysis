@@ -118,11 +118,15 @@ namespace PhysicalAnalysis
             {
                 foreach (var (symbol, unit) in Dimension.compositeSymbols)
                 {
+                    if (Math.Abs(unit.factor.value - 1) > 0.01 && Math.Abs(unit.factor.value - 1000) > 0.01)
+                    {
+                        continue;
+                    }
                     var remainder = this - unit.factor.dimension;
 
-                    if (remainder.dimension.Count <= this.dimension.Count)
+                    if ((remainder.dimension.Count + 1) < this.dimension.Count)
                     {
-                        return " " + unit.symbol + remainder.ToStringRaw();
+                        return " " + unit.symbol + remainder;
                     }
                 }
             }
@@ -131,6 +135,33 @@ namespace PhysicalAnalysis
                 return dimension.Aggregate("", (current, kv) => current + " " + (kv.Value.Item1 == Unit.Gram ? "k" : "") + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
             }
             return dimension.Aggregate("", (current, kv) => current + " " + (kv.Value.Item2 == 1 ? kv.Value.Item1.Symbol : $"{kv.Value.Item1.Symbol}^{kv.Value.Item2}"));
+        }
+
+        /// <summary>
+        ///     Converts the QuantityDimension to a string, following the MathOptions.consolidateUnits setting and allowing conversions to derived units with factors other than one.
+        /// </summary>
+        /// <returns></returns>
+        public readonly string ToStringQuantified(ref double quantity)
+        {
+            if (MathOptions.consolidateUnits)
+            {
+                foreach (var (symbol, unit) in Dimension.compositeSymbols)
+                {
+                    var remainder = this - unit.factor.dimension;
+
+                    if ((remainder.dimension.Count + 1) < this.dimension.Count)
+                    {
+                        var newQuantity = quantity / unit.factor.value;
+
+                        if (Math.Abs(Math.Log10(newQuantity)) < Math.Abs(Math.Log10(quantity)))
+                        {
+                            quantity = newQuantity;
+                            return " " + unit.symbol + remainder.ToStringQuantified(ref quantity);
+                        }
+                    }
+                }
+            }
+            return ToString();
         }
 
         /// <summary>

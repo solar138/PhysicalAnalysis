@@ -26,7 +26,7 @@ namespace PhysicalAnalysis
         /// <summary>
         ///     The priority order for which units are consolidated first, if multiple are available.
         /// </summary>
-        public static List<CompositeUnit> consolidatePriority = [];
+        public static List<DerivedUnit> consolidatePriority = [];
 
         /// <summary>
         ///     Converts an angle to radians if useRadians is true.
