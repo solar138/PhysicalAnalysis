@@ -188,6 +188,31 @@ namespace PhysicalAnalysis
             }
         }
 
+        public readonly string ToStringRaw()
+        {
+            var value = this.value;
+            if (!MathOptions.baseKilograms)
+            {
+                var units = dimension.ToStringRaw();
+                return $"{value}{units}";
+            }
+
+            var (unit, power) = dimension.GetUnits(Dimension.Mass);
+
+            if (unit == Unit.Gram)
+            {
+                value *= Math.Pow(0.001, power);
+
+                var units = dimension.ToStringRaw();
+                return $"{value}{units}";
+            }
+            else
+            {
+                var units = dimension.ToStringRaw();
+                return $"{value}{units}";
+            }
+        }
+
         /// <summary>
         ///     Returns the string representation of the quantity's units with respect to the scale of the dimension in consolidating units.
         /// </summary>
@@ -276,7 +301,7 @@ namespace PhysicalAnalysis
             }
 
             var dimension = new QuantityDimension(this.dimension).ReplaceUnit(unit, power);
-            return new Quantity((value - oldUnit.BaseOffset) * Math.Pow(unit.BaseFactor / oldUnit.BaseFactor, power) + unit.BaseOffset, dimension);
+            return new Quantity((value - oldUnit.BaseOffset) * Math.Pow(oldUnit.BaseFactor / unit.BaseFactor, power) + unit.BaseOffset, dimension);
         }
 
         /// <summary>
